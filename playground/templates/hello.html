@@ -8,5 +8,10 @@
 </head>
 <body>
     <h1>Hello from renewed Django learning attempt from {{name}}</h1>
+    <ul>
+        {%  for product in products %}
+            <li> {{ product.first_name }} </li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
