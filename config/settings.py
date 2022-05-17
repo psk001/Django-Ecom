@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     #third party
     'debug_toolbar',
     'rest_framework',
+    'django_filters',
 
     #local apps
     'playground',
@@ -144,4 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'COERCE_DECIMAL_TO_STRING': False
+    # 'DFAULT_PAGINATION_CLASS':  'rest_framework.pagination.PageNumberPagination',
+    #  'DFAULT_PAGINATION_CLASS':  'rest_framework.pagination.LimitOffsetPagination',
+    # 'PAGE_SIZE':10
 }

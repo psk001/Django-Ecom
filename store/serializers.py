@@ -1,15 +1,17 @@
 from decimal import Decimal
+from itertools import product
 from math import prod
 from pyexpat import model
+from xml.sax.handler import property_declaration_handler
 from rest_framework import serializers
-from .models import Product, Collection
+from .models import Product, Collection, Review
 
 class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model=Collection
         fields = ['id', 'title', 'products_count']
     
-    products_count = serializers.IntegerField()
+    products_count = serializers.IntegerField(read_only=True)
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -51,6 +53,14 @@ class ProductSerializer(serializers.ModelSerializer):
     #     return instance
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id', 'date', 'name', 'review']
+
+    def create(self, validated_data):
+        product_id = self.context['product_id']
+        return Review.objects.create (product_id, **validated_data)
 
 
 

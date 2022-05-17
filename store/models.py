@@ -2,6 +2,7 @@ from ast import Or
 from enum import auto
 from gc import collect
 from http.client import PAYMENT_REQUIRED
+from itertools import product
 from math import prod
 from platform import release
 from statistics import mode
@@ -121,8 +122,11 @@ class CartItem(models.Model):
     quantity = models.PositiveSmallIntegerField()
 
 
-
-
+class Review(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    name = models.CharField(max_length=255)
+    description = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
 
 
 
