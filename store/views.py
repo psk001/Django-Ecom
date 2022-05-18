@@ -5,11 +5,14 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-from rest_framework.decorators import APIView #api_view for function based views
+# from rest_framework.decorators import APIView #api_view for function based views
 from rest_framework.filters import SearchFilter, OrderingFilter
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.mixins import CreateModelMixin, \
+                                  RetrieveModelMixin, \
+                                  DestroyModelMixin
+# from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 # from rest_framework.generics import ListCreateAPIView,RetrieveUpdateDestroyAPIView
 
 
@@ -17,8 +20,14 @@ from store.filters import ProductFilter
 from store.pagination import DefaultPagination
 # from rest_framework.mixins import ListModelMixin, CreateModelMixin
 
-from .models import Collection, OrderItem, Product, Review
-from .serializers import CollectionSerializer, ProductSerializer, ReviewSerializer
+from .models import Cart, CartItem, Collection, OrderItem, Product, Review
+from .serializers import AddCartItemSerializer, \
+                         CartItemSerializer, \
+                         UpdateCartItemSerializer, \
+                         CartSerializer, \
+                         CollectionSerializer, \
+                         ProductSerializer, \
+                         ReviewSerializer
 
 
 
@@ -109,7 +118,49 @@ class ReviewViewSet(ModelViewSet):
         return {'product_id': self.kwargs['product_pk']}
 
 
-# gemeric API view
+
+class CartViewSet(CreateModelMixin, 
+                  RetrieveModelMixin, 
+                  DestroyModelMixin,
+                  GenericViewSet):
+
+    def get_queryset(self):
+        return Cart.objects.prefetch_related('items__product').all()
+
+    def get_serializer_class(self):
+        return CartSerializer
+
+
+
+class CartItemViewSet(ModelViewSet):
+
+    http_method_names = ['get', 'put', 'post', 'delete']
+    
+    def get_queryset(self):
+        return CartItem.objects.select_related('products').filter(cart_id=self.kwargs['cart_pk'])  
+                
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return AddCartItemSerializer
+
+        elif request.method=='PATCH':
+            return UpdateCartItemSerializer
+
+        return CartItemSerializer
+
+    def get_serializer_context(self):
+        return {'cart_id': self.kwargs['cart_pk']}
+
+
+
+
+
+
+
+
+
+
+# generic API view
 # class ProductList(ListCreateAPIView):
 
 #     def get_queryset(self):
