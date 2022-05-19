@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 
 from pathlib import Path
-from pickle import FALSE
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -43,11 +43,13 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'rest_framework',
     'django_filters',
+    'djoser',
 
     #local apps
     'playground',
     'store',
-    'tags'
+    'tags',
+    'core'
 ]
 
 MIDDLEWARE = [
@@ -94,7 +96,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'storefront2',
+        'NAME': 'storefront3',
         'HOST': 'localhost',
         'USER':'root',
         'PASSWORD': 'root'
@@ -144,8 +146,29 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    'COERCE_DECIMAL_TO_STRING': False
+    'COERCE_DECIMAL_TO_STRING': False,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    # 'DEFAULT_PERMISSION_CLASSES' :[
+    #     'rest_framework.permissions.IsAuthenticated'
+    # ]
     # 'DFAULT_PAGINATION_CLASS':  'rest_framework.pagination.PageNumberPagination',
     #  'DFAULT_PAGINATION_CLASS':  'rest_framework.pagination.LimitOffsetPagination',
     # 'PAGE_SIZE':10
+}
+
+AUTH_USER_MODEL = 'core.user'
+
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create':'core.serializers.UserCreateSerializer',
+        'user_serializer':'core.serializers.UserSerializer',
+    }
+}
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('JWT'),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=5),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=100),
 }

@@ -5,11 +5,13 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 
 from rest_framework import status
-# from rest_framework.decorators import APIView #api_view for function based views
+from rest_framework.decorators import action  # APIView #api_view for function based views
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.mixins import CreateModelMixin, \
                                   RetrieveModelMixin, \
+                                  UpdateModelMixin, \
                                   DestroyModelMixin
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny                                  
 # from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
@@ -18,16 +20,18 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from store.filters import ProductFilter
 from store.pagination import DefaultPagination
+from store.permissions import FullDjangoModelPermissions, IsAdminOrReadOnly, ViewCustomerHistory
 # from rest_framework.mixins import ListModelMixin, CreateModelMixin
 
-from .models import Cart, CartItem, Collection, OrderItem, Product, Review
+from .models import Cart, CartItem, Collection, Customer, OrderItem, Product, Review
 from .serializers import AddCartItemSerializer, \
-                         CartItemSerializer, \
+                         CartItemSerializer, CustomerSerializer, \
                          UpdateCartItemSerializer, \
                          CartSerializer, \
                          CollectionSerializer, \
                          ProductSerializer, \
                          ReviewSerializer
+from store import serializers
 
 
 
@@ -39,6 +43,7 @@ class ProductViewSet(ModelViewSet):
     search_fields = ['title', 'description', 'collection__title']
     ordering_fields = ['unit_price', 'last_update']
     pagination_class =  DefaultPagination   #PageNumberPagination  #already set in settings 
+    permission_classes = [IsAdminOrReadOnly]
     # filterset_fields = ['collection_id', 'unit_price']
 
     def get_queryset(self):
@@ -75,6 +80,7 @@ class ProductViewSet(ModelViewSet):
 
 # generic API viewset for Collection 
 class CollectionViewSet(ModelViewSet):
+    permission_classes = [IsAdminOrReadOnly]
     def get_queryset(self):
         return Collection.objects.annotate(
             products_count=Count('products')
@@ -150,10 +156,43 @@ class CartItemViewSet(ModelViewSet):
 
     def get_serializer_context(self):
         return {'cart_id': self.kwargs['cart_pk']}
+ 
 
 
+class CustomerViewSet(ModelViewSet): #CreateModelMixin, RetrieveModelMixin, UpdateModelMixin, GenericViewSet):
+    
+    permission_classes =  [IsAdminUser]  # [FullDjangoModelPermissions]
+    def get_queryset(self):
+        return Customer.objects.all()
 
+    def get_serializer_class(self):
+        return CustomerSerializer
 
+    
+    def get_permissions(self):
+        if request.method=='GET':
+            return [AllowAny()]
+
+        return [IsAuthenticated()]
+
+    @action(detail=True, permission_classes=[ViewCustomerHistory])
+    def history(self, request, pk):
+        return Response('ok')
+
+    @action(detail=False, methods=['GET', 'PUT'], permission_classes=[IsAuthenticated])
+    def me(self, request):
+        (customer, created) = Customer.objects.get_or_create(user_id=request.user.id)  #anonymous
+
+        if request.method=='GET':
+            serializer = CustomerSerializer(customer)
+            return Response(serializer.data)
+
+        elif request.method=='PUT':
+            serializer = CustomerSerializer(customer, data=request.data)
+            serializer.is_valid()
+            serializer.save()
+            return Response(serializer.data)
+             
 
 
 
